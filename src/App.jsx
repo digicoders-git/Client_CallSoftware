@@ -33,20 +33,22 @@ export default function App() {
   const [campaigns, setCampaigns] = useState([]);
   const [stats, setStats] = useState({ total: 0, answered: 0, failed: 0 });
   const [students, setStudents] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     try {
       const [callRes, campRes, stuRes] = await Promise.all([
-        axios.get(`${API_BASE}/call-data`),
+        axios.get(`${API_BASE}/call-data?page=${page}&limit=10`),
         axios.get(`${API_BASE}/campaigns`).catch(() => ({ data: [] })),
         axios.get(`${API_BASE}/students`).catch(() => ({ data: [] })),
       ]);
-      const data = callRes.data;
+      const { data, total, totalPages } = callRes.data;
       const answered = data.filter(l => l.status === 'ANSWERED').length;
       setLogs(data);
       setCampaigns(campRes.data);
       setStudents(stuRes.data);
-      setStats({ total: data.length, answered, failed: data.length - answered });
+      setPagination({ page, totalPages, total });
+      setStats({ total, answered, failed: total - answered });
     } catch (e) { console.error(e); }
   };
 
@@ -104,7 +106,7 @@ export default function App() {
         </header>
 
         <main className="main-content animate-fade-in">
-          {tab === 'dashboard' && <Dashboard stats={stats} logs={logs} />}
+          {tab === 'dashboard' && <Dashboard stats={stats} logs={logs} pagination={pagination} onPageChange={p => fetchData(p)} />}
           {tab === 'campaigns' && <CampaignAnalysis campaigns={campaigns} />}
           {tab === 'students'  && <StudentManager students={students} onUpdate={fetchData} />}
         </main>
@@ -176,13 +178,13 @@ function Login({ onLogin }) {
 }
 
 // ── Dashboard ──────────────────────────────────────────
-function Dashboard({ stats, logs }) {
+function Dashboard({ stats, logs, pagination, onPageChange }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [durationFilter, setDurationFilter] = useState('ALL');
   const [campaignFilter, setCampaignFilter] = useState('ALL');
-  const [page, setPage] = useState(1);
-  const PER_PAGE = 10;
+
+  const { page, totalPages, total } = pagination;
 
   const sc = s => s === 'ANSWERED'
     ? { bg: 'rgba(16,185,129,0.12)', color: '#10b981', border: 'rgba(16,185,129,0.25)' }
@@ -215,17 +217,13 @@ function Dashboard({ stats, logs }) {
     return matchSearch && matchStatus && matchCampaign && matchDuration;
   });
 
-  const clearFilters = () => { setSearch(''); setStatusFilter('ALL'); setDurationFilter('ALL'); setCampaignFilter('ALL'); setPage(1); };
+  const clearFilters = () => { setSearch(''); setStatusFilter('ALL'); setDurationFilter('ALL'); setCampaignFilter('ALL'); };
   const isFiltered = search || statusFilter !== 'ALL' || durationFilter !== 'ALL' || campaignFilter !== 'ALL';
 
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-  // Reset to page 1 when filters change
-  const handleSearch = v => { setSearch(v); setPage(1); };
-  const handleStatus = v => { setStatusFilter(v); setPage(1); };
-  const handleDuration = v => { setDurationFilter(v); setPage(1); };
-  const handleCampaign = v => { setCampaignFilter(v); setPage(1); };
+  const handleSearch = v => { setSearch(v); };
+  const handleStatus = v => { setStatusFilter(v); };
+  const handleDuration = v => { setDurationFilter(v); };
+  const handleCampaign = v => { setCampaignFilter(v); };
 
   return (
     <div>
@@ -239,7 +237,7 @@ function Dashboard({ stats, logs }) {
       <div className="glass-card card-pad">
         <div className="card-header">
           <h3>Call Details</h3>
-          <span className="badge">{filtered.length} / {logs.length} records</span>
+          <span className="badge">{total} records</span>
         </div>
 
         {/* Filters */}
@@ -293,7 +291,7 @@ function Dashboard({ stats, logs }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.length > 0 ? paginated.map((log, i) => {
+              {filtered.length > 0 ? filtered.map((log, i) => {
                 const s = sc(log.status);
                 return (
                   <tr key={i}>
@@ -340,20 +338,20 @@ function Dashboard({ stats, logs }) {
 
         {totalPages > 1 && (
           <div className="pagination">
-            <button className="page-btn" onClick={() => setPage(1)} disabled={page === 1}>«</button>
-            <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={page === 1}>‹</button>
+            <button className="page-btn" onClick={() => onPageChange(1)} disabled={page === 1}>«</button>
+            <button className="page-btn" onClick={() => onPageChange(page - 1)} disabled={page === 1}>‹</button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
               .reduce((acc, p, idx, arr) => { if (idx > 0 && p - arr[idx-1] > 1) acc.push('...'); acc.push(p); return acc; }, [])
               .map((p, i) => p === '...' ? (
                 <span key={i} className="page-dots">...</span>
               ) : (
-                <button key={p} className={`page-btn ${page === p ? 'page-btn--active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+                <button key={p} className={`page-btn ${page === p ? 'page-btn--active' : ''}`} onClick={() => onPageChange(p)}>{p}</button>
               ))
             }
-            <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>›</button>
-            <button className="page-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>»</button>
-            <span className="page-info">{(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE, filtered.length)} of {filtered.length}</span>
+            <button className="page-btn" onClick={() => onPageChange(page + 1)} disabled={page === totalPages}>›</button>
+            <button className="page-btn" onClick={() => onPageChange(totalPages)} disabled={page === totalPages}>»</button>
+            <span className="page-info">{(page-1)*10+1}–{Math.min(page*10, total)} of {total}</span>
           </div>
         )}
       </div>
