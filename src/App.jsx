@@ -181,6 +181,8 @@ function Dashboard({ stats, logs }) {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [durationFilter, setDurationFilter] = useState('ALL');
   const [campaignFilter, setCampaignFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 10;
 
   const sc = s => s === 'ANSWERED'
     ? { bg: 'rgba(16,185,129,0.12)', color: '#10b981', border: 'rgba(16,185,129,0.25)' }
@@ -213,8 +215,17 @@ function Dashboard({ stats, logs }) {
     return matchSearch && matchStatus && matchCampaign && matchDuration;
   });
 
-  const clearFilters = () => { setSearch(''); setStatusFilter('ALL'); setDurationFilter('ALL'); setCampaignFilter('ALL'); };
+  const clearFilters = () => { setSearch(''); setStatusFilter('ALL'); setDurationFilter('ALL'); setCampaignFilter('ALL'); setPage(1); };
   const isFiltered = search || statusFilter !== 'ALL' || durationFilter !== 'ALL' || campaignFilter !== 'ALL';
+
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  // Reset to page 1 when filters change
+  const handleSearch = v => { setSearch(v); setPage(1); };
+  const handleStatus = v => { setStatusFilter(v); setPage(1); };
+  const handleDuration = v => { setDurationFilter(v); setPage(1); };
+  const handleCampaign = v => { setCampaignFilter(v); setPage(1); };
 
   return (
     <div>
@@ -239,18 +250,18 @@ function Dashboard({ stats, logs }) {
               className="input-field search-input"
               placeholder="Search phone, campaign, status..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => handleSearch(e.target.value)}
             />
           </div>
 
-          <select className="input-field filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <select className="input-field filter-select" value={statusFilter} onChange={e => handleStatus(e.target.value)}>
             <option value="ALL">All Status</option>
             <option value="ANSWERED">Answered</option>
             <option value="NO_ANSWER">No Answer</option>
             <option value="BUSY">Busy</option>
           </select>
 
-          <select className="input-field filter-select" value={durationFilter} onChange={e => setDurationFilter(e.target.value)}>
+          <select className="input-field filter-select" value={durationFilter} onChange={e => handleDuration(e.target.value)}>
             <option value="ALL">All Duration</option>
             <option value="0">0s (No Answer)</option>
             <option value="1-30">1s - 30s</option>
@@ -258,7 +269,7 @@ function Dashboard({ stats, logs }) {
             <option value="60+">60s+</option>
           </select>
 
-          <select className="input-field filter-select" value={campaignFilter} onChange={e => setCampaignFilter(e.target.value)}>
+          <select className="input-field filter-select" value={campaignFilter} onChange={e => handleCampaign(e.target.value)}>
             <option value="ALL">All Campaigns</option>
             {uniqueCampaigns.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -282,7 +293,7 @@ function Dashboard({ stats, logs }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.length > 0 ? filtered.map((log, i) => {
+              {filtered.length > 0 ? paginated.map((log, i) => {
                 const s = sc(log.status);
                 return (
                   <tr key={i}>
@@ -326,6 +337,25 @@ function Dashboard({ stats, logs }) {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button className="page-btn" onClick={() => setPage(1)} disabled={page === 1}>«</button>
+            <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={page === 1}>‹</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce((acc, p, idx, arr) => { if (idx > 0 && p - arr[idx-1] > 1) acc.push('...'); acc.push(p); return acc; }, [])
+              .map((p, i) => p === '...' ? (
+                <span key={i} className="page-dots">...</span>
+              ) : (
+                <button key={p} className={`page-btn ${page === p ? 'page-btn--active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+              ))
+            }
+            <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>›</button>
+            <button className="page-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>»</button>
+            <span className="page-info">{(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE, filtered.length)} of {filtered.length}</span>
+          </div>
+        )}
       </div>
     </div>
   );
