@@ -34,11 +34,14 @@ export default function App() {
   const [stats, setStats] = useState({ total: 0, answered: 0, failed: 0 });
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const currentPageRef = React.useRef(1);
 
-  const fetchData = async (page = 1) => {
+  const fetchData = async (page) => {
+    const p = page !== undefined ? page : currentPageRef.current;
+    currentPageRef.current = p;
     try {
       const [callRes, campRes, stuRes] = await Promise.all([
-        axios.get(`${API_BASE}/call-data?page=${page}&limit=10`),
+        axios.get(`${API_BASE}/call-data?page=${p}&limit=10`),
         axios.get(`${API_BASE}/campaigns`).catch(() => ({ data: [] })),
         axios.get(`${API_BASE}/students`).catch(() => ({ data: [] })),
       ]);
@@ -47,7 +50,7 @@ export default function App() {
       setLogs(data);
       setCampaigns(campRes.data);
       setStudents(stuRes.data);
-      setPagination({ page, totalPages, total });
+      setPagination({ page: p, totalPages, total });
       setStats({ total, answered, failed: total - answered });
     } catch (e) { console.error(e); }
   };
