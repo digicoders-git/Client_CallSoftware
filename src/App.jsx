@@ -177,11 +177,44 @@ function Login({ onLogin }) {
 
 // ── Dashboard ──────────────────────────────────────────
 function Dashboard({ stats, logs }) {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [durationFilter, setDurationFilter] = useState('ALL');
+  const [campaignFilter, setCampaignFilter] = useState('ALL');
+
   const sc = s => s === 'ANSWERED'
     ? { bg: 'rgba(16,185,129,0.12)', color: '#10b981', border: 'rgba(16,185,129,0.25)' }
     : s === 'BUSY'
     ? { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: 'rgba(245,158,11,0.25)' }
     : { bg: 'rgba(239,68,68,0.12)',  color: '#ef4444', border: 'rgba(239,68,68,0.25)' };
+
+  const uniqueCampaigns = [...new Set(logs.map(l => l.campaignName).filter(Boolean))];
+
+  const filtered = logs.filter(log => {
+    const q = search.toLowerCase();
+    const matchSearch = !q ||
+      log.phone?.toLowerCase().includes(q) ||
+      log.campaignName?.toLowerCase().includes(q) ||
+      log.status?.toLowerCase().includes(q) ||
+      log.dtmf?.toLowerCase().includes(q);
+
+    const matchStatus = statusFilter === 'ALL' || log.status === statusFilter;
+
+    const matchCampaign = campaignFilter === 'ALL' || log.campaignName === campaignFilter;
+
+    const dur = log.duration || 0;
+    const matchDuration =
+      durationFilter === 'ALL'  ? true :
+      durationFilter === '0'    ? dur === 0 :
+      durationFilter === '1-30' ? dur >= 1 && dur <= 30 :
+      durationFilter === '31-60'? dur >= 31 && dur <= 60 :
+      durationFilter === '60+'  ? dur > 60 : true;
+
+    return matchSearch && matchStatus && matchCampaign && matchDuration;
+  });
+
+  const clearFilters = () => { setSearch(''); setStatusFilter('ALL'); setDurationFilter('ALL'); setCampaignFilter('ALL'); };
+  const isFiltered = search || statusFilter !== 'ALL' || durationFilter !== 'ALL' || campaignFilter !== 'ALL';
 
   return (
     <div>
@@ -195,8 +228,46 @@ function Dashboard({ stats, logs }) {
       <div className="glass-card card-pad">
         <div className="card-header">
           <h3>Call Details</h3>
-          <span className="badge">{logs.length} records</span>
+          <span className="badge">{filtered.length} / {logs.length} records</span>
         </div>
+
+        {/* Filters */}
+        <div className="filters-row">
+          <div className="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input
+              className="input-field search-input"
+              placeholder="Search phone, campaign, status..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+
+          <select className="input-field filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+            <option value="ALL">All Status</option>
+            <option value="ANSWERED">Answered</option>
+            <option value="NO_ANSWER">No Answer</option>
+            <option value="BUSY">Busy</option>
+          </select>
+
+          <select className="input-field filter-select" value={durationFilter} onChange={e => setDurationFilter(e.target.value)}>
+            <option value="ALL">All Duration</option>
+            <option value="0">0s (No Answer)</option>
+            <option value="1-30">1s - 30s</option>
+            <option value="31-60">31s - 60s</option>
+            <option value="60+">60s+</option>
+          </select>
+
+          <select className="input-field filter-select" value={campaignFilter} onChange={e => setCampaignFilter(e.target.value)}>
+            <option value="ALL">All Campaigns</option>
+            {uniqueCampaigns.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+
+          {isFiltered && (
+            <button className="btn-clear" onClick={clearFilters}>✕ Clear</button>
+          )}
+        </div>
+
         <div className="table-wrap">
           <table>
             <thead>
@@ -211,7 +282,7 @@ function Dashboard({ stats, logs }) {
               </tr>
             </thead>
             <tbody>
-              {logs.length > 0 ? logs.map((log, i) => {
+              {filtered.length > 0 ? filtered.map((log, i) => {
                 const s = sc(log.status);
                 return (
                   <tr key={i}>
@@ -250,7 +321,7 @@ function Dashboard({ stats, logs }) {
                   </tr>
                 );
               }) : (
-                <tr><td colSpan="7" className="empty-row">No call data yet</td></tr>
+                <tr><td colSpan="7" className="empty-row">No records found</td></tr>
               )}
             </tbody>
           </table>
