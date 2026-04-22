@@ -286,7 +286,7 @@ function Dashboard({ stats, logs }) {
                 <th>Phone</th>
                 <th>Campaign</th>
                 <th>Status</th>
-                <th>DTMF</th>
+                <th>Button Pressed</th>
                 <th>Duration</th>
                 <th>Agent</th>
                 <th>Time</th>
@@ -317,8 +317,8 @@ function Dashboard({ stats, logs }) {
                     </td>
                     <td>
                       {log.dtmf
-                        ? <span className="dtmf-badge">🔢 {log.dtmf}</span>
-                        : <span className="muted">—</span>}
+                        ? <span className="dtmf-btn">Pressed {log.dtmf}</span>
+                        : <span className="muted">No Input</span>}
                     </td>
                     <td>
                       {log.duration > 0
