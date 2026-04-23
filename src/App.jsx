@@ -41,7 +41,8 @@ export default function App() {
         axios.get(`${API_BASE}/campaigns`).catch(() => ({ data: [] })),
         axios.get(`${API_BASE}/students`).catch(() => ({ data: [] })),
       ]);
-      const data = callRes.data.data || callRes.data;
+      const raw = callRes.data;
+      const data = Array.isArray(raw) ? raw : (raw.data || []);
       const answered = data.filter(l => l.status === 'ANSWERED').length;
       setLogs(data);
       setCampaigns(campRes.data);
