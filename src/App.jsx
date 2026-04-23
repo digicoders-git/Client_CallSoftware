@@ -65,8 +65,6 @@ export default function App() {
   useEffect(() => {
     if (loggedIn) {
       fetchData();
-      const t = setInterval(fetchData, 5000);
-      return () => clearInterval(t);
     }
   }, [loggedIn]);
 
