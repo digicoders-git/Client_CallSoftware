@@ -33,10 +33,12 @@ export default function App() {
   const [campaigns, setCampaigns] = useState([]);
   const [stats, setStats] = useState({ total: 0, answered: 0, failed: 0 });
   const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const today = new Date().toISOString().split('T')[0];
   const [dateRange, setDateRange] = useState({ start: today, end: today });
 
   const fetchData = async (start = dateRange.start, end = dateRange.end) => {
+    setLoading(true);
     try {
       let url = `${API_BASE}/call-data`;
       const params = [];
@@ -56,7 +58,7 @@ export default function App() {
       setCampaigns(campRes.data);
       setStudents(stuRes.data);
       setStats({ total: data.length, answered, failed: data.length - answered });
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   useEffect(() => { if (localStorage.getItem('isLoggedIn')) setLoggedIn(true); }, []);
@@ -115,7 +117,7 @@ export default function App() {
         </header>
 
         <main className="main-content animate-fade-in">
-          {tab === 'dashboard' && <Dashboard stats={stats} logs={logs} dateRange={dateRange} onDateChange={(s,e) => { setDateRange({start:s,end:e}); fetchData(s,e); }} />}
+          {tab === 'dashboard' && <Dashboard stats={stats} logs={logs} loading={loading} dateRange={dateRange} onDateChange={(s,e) => { setDateRange({start:s,end:e}); fetchData(s,e); }} />}
           {tab === 'campaigns' && <CampaignAnalysis campaigns={campaigns} />}
           {tab === 'students'  && <StudentManager students={students} onUpdate={fetchData} />}
         </main>
@@ -221,7 +223,7 @@ function Login({ onLogin }) {
 }
 
 // ── Dashboard ──────────────────────────────────────────
-function Dashboard({ stats, logs, dateRange, onDateChange }) {
+function Dashboard({ stats, logs, loading, dateRange, onDateChange }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [durationFilter, setDurationFilter] = useState('ALL');
@@ -359,7 +361,16 @@ function Dashboard({ stats, logs, dateRange, onDateChange }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.length > 0 ? paginated.map((log, i) => {
+              {loading ? (
+                <tr>
+                  <td colSpan="8" style={{ padding: '60px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', color: 'var(--text-muted)' }}>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                      <span style={{ fontSize: '14px' }}>Loading data...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.length > 0 ? paginated.map((log, i) => {
                 const s = sc(log.status);
                 return (
                   <tr key={i}>
@@ -399,7 +410,7 @@ function Dashboard({ stats, logs, dateRange, onDateChange }) {
                   </tr>
                 );
               }) : (
-                <tr><td colSpan="7" className="empty-row">No records found</td></tr>
+                <tr><td colSpan="8" className="empty-row">No records found</td></tr>
               )}
             </tbody>
           </table>
