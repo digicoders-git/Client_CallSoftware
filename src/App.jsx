@@ -290,12 +290,12 @@ function Dashboard({ stats, logs }) {
             <thead>
               <tr>
                 <th>Phone</th>
-                <th>Campaign</th>
-                <th>Status</th>
-                <th>Button Pressed</th>
                 <th onClick={toggleDurationSort} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
                   Duration {durationSort === 'asc' ? '↑' : durationSort === 'desc' ? '↓' : '↕'}
                 </th>
+                <th>Campaign</th>
+                <th>Status</th>
+                <th>Button Pressed</th>
                 <th>Agent</th>
                 <th>Time</th>
               </tr>
@@ -312,6 +312,11 @@ function Dashboard({ stats, logs }) {
                         <a href={`https://wa.me/${log.phone}`} target="_blank" rel="noreferrer" className="action-btn action-btn--wa" title="WhatsApp">{Icon.wa}</a>
                       </div>
                     </td>
+                    <td onClick={toggleDurationSort} style={{ cursor: 'pointer' }}>
+                      {log.duration > 0
+                        ? <span className="duration">{log.duration}s {durationSort === 'asc' ? '↑' : durationSort === 'desc' ? '↓' : ''}</span>
+                        : <span className="muted">0s</span>}
+                    </td>
                     <td>
                       <div className="campaign-cell">
                         <span className="campaign-name">{log.campaignName || '-'}</span>
@@ -327,11 +332,6 @@ function Dashboard({ stats, logs }) {
                       {log.dtmf
                         ? <span className="dtmf-btn">Pressed {log.dtmf}</span>
                         : <span className="muted">No Input</span>}
-                    </td>
-                    <td>
-                      {log.duration > 0
-                        ? <span className="duration">{log.duration}s</span>
-                        : <span className="muted">0s</span>}
                     </td>
                     <td className="muted">{log.agentNumber || '—'}</td>
                     <td className="muted time-cell">
