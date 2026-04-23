@@ -813,3 +813,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .date-filter-row { flex-direction: column; }
   .date-filter-row .field { width: 100%; }
 }
+
+.alert--success {
+  background: rgba(16,185,129,0.1);
+  color: #6ee7b7;
+  border: 1px solid rgba(16,185,129,0.2);
+}
