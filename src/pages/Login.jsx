@@ -64,9 +64,7 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In →'}
             </button>
           </form>
-          <p style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
-            Default admin: <strong>admin</strong> / <strong>admin@123</strong>
-          </p>
+
         </div>
       </div>
     </div>
