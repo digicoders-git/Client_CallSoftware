@@ -109,7 +109,10 @@ export default function App() {
         <header className="topbar glass-card">
           <button className="icon-btn hamburger" onClick={() => setSidebarOpen(true)}>{Icon.menu}</button>
           <span className="topbar__title">{navItems.find(n => n.id === tab)?.label}</span>
-          <span className="live-badge"><span className="live-dot" />Live</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <SyncButton />
+            <span className="live-badge"><span className="live-dot" />Live</span>
+          </div>
         </header>
 
         <main className="main-content animate-fade-in">
@@ -118,6 +121,37 @@ export default function App() {
           {tab === 'students'  && <StudentManager students={students} onUpdate={fetchData} />}
         </main>
       </div>
+    </div>
+  );
+}
+
+function SyncButton() {
+  const [syncing, setSyncing] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const handleSync = async () => {
+    setSyncing(true); setMsg('');
+    try {
+      const res = await axios.post(`${API_BASE}/sync`);
+      setMsg(`✓ Synced ${res.data.synced || 0} records`);
+      setTimeout(() => setMsg(''), 4000);
+    } catch (e) {
+      setMsg('Sync failed');
+      setTimeout(() => setMsg(''), 3000);
+    } finally { setSyncing(false); }
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {msg && <span style={{ fontSize: '12px', color: '#10b981' }}>{msg}</span>}
+      <button className="btn-primary" onClick={handleSync} disabled={syncing}
+        style={{ padding: '6px 14px', fontSize: '13px', height: '34px' }}>
+        {syncing ? <>{Icon.spin} Syncing...</> : <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Sync OBD
+        </>
+        }
+      </button>
     </div>
   );
 }
