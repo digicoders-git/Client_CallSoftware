@@ -33,11 +33,18 @@ export default function App() {
   const [campaigns, setCampaigns] = useState([]);
   const [stats, setStats] = useState({ total: 0, answered: 0, failed: 0 });
   const [students, setStudents] = useState([]);
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  const fetchData = async () => {
+  const fetchData = async (start = dateRange.start, end = dateRange.end) => {
     try {
+      let url = `${API_BASE}/call-data`;
+      const params = [];
+      if (start) params.push(`startDate=${start}`);
+      if (end)   params.push(`endDate=${end}`);
+      if (params.length) url += '?' + params.join('&');
+
       const [callRes, campRes, stuRes] = await Promise.all([
-        axios.get(`${API_BASE}/call-data`),
+        axios.get(url),
         axios.get(`${API_BASE}/campaigns`).catch(() => ({ data: [] })),
         axios.get(`${API_BASE}/students`).catch(() => ({ data: [] })),
       ]);
@@ -105,7 +112,7 @@ export default function App() {
         </header>
 
         <main className="main-content animate-fade-in">
-          {tab === 'dashboard' && <Dashboard stats={stats} logs={logs} />}
+          {tab === 'dashboard' && <Dashboard stats={stats} logs={logs} dateRange={dateRange} onDateChange={(s,e) => { setDateRange({start:s,end:e}); fetchData(s,e); }} />}
           {tab === 'campaigns' && <CampaignAnalysis campaigns={campaigns} />}
           {tab === 'students'  && <StudentManager students={students} onUpdate={fetchData} />}
         </main>
@@ -177,7 +184,7 @@ function Login({ onLogin }) {
 }
 
 // ── Dashboard ──────────────────────────────────────────
-function Dashboard({ stats, logs }) {
+function Dashboard({ stats, logs, dateRange, onDateChange }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [durationFilter, setDurationFilter] = useState('ALL');
@@ -246,6 +253,19 @@ function Dashboard({ stats, logs }) {
         <div className="card-header">
           <h3>Call Details</h3>
           <span className="badge">{sorted.length} records</span>
+        </div>
+
+        {/* Date Filter */}
+        <div className="date-filter-row">
+          <div className="field">
+            <label>Start Date</label>
+            <input type="date" className="input-field" value={dateRange.start} onChange={e => onDateChange(e.target.value, dateRange.end)} />
+          </div>
+          <div className="field">
+            <label>End Date</label>
+            <input type="date" className="input-field" value={dateRange.end} onChange={e => onDateChange(dateRange.start, e.target.value)} />
+          </div>
+          <button className="btn-primary" onClick={() => onDateChange('', '')} style={{ alignSelf: 'flex-end', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>Clear Dates</button>
         </div>
 
         {/* Filters */}
