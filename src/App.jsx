@@ -395,7 +395,7 @@ function Dashboard({ stats, logs, dateRange, onDateChange }) {
                     </td>
                     <td className="muted">{log.agentNumber || '—'}</td>
                     <td className="muted time-cell">
-                      {new Date(log.timestamp).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(log.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
                     </td>
                   </tr>
                 );
