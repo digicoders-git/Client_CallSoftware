@@ -110,7 +110,6 @@ export default function App() {
           <button className="icon-btn hamburger" onClick={() => setSidebarOpen(true)}>{Icon.menu}</button>
           <span className="topbar__title">{navItems.find(n => n.id === tab)?.label}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <SyncButton />
             <span className="live-badge"><span className="live-dot" />Live</span>
           </div>
         </header>
