@@ -33,7 +33,8 @@ export default function App() {
   const [campaigns, setCampaigns] = useState([]);
   const [stats, setStats] = useState({ total: 0, answered: 0, failed: 0 });
   const [students, setStudents] = useState([]);
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const today = new Date().toISOString().split('T')[0];
+  const [dateRange, setDateRange] = useState({ start: today, end: today });
 
   const fetchData = async (start = dateRange.start, end = dateRange.end) => {
     try {
