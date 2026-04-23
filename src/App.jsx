@@ -110,7 +110,7 @@ export default function App() {
           <button className="icon-btn hamburger" onClick={() => setSidebarOpen(true)}>{Icon.menu}</button>
           <span className="topbar__title">{navItems.find(n => n.id === tab)?.label}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <SyncButton />
+          <SyncButton />
             <span className="live-badge"><span className="live-dot" />Live</span>
           </div>
         </header>
@@ -126,32 +126,35 @@ export default function App() {
 }
 
 function SyncButton() {
-  const [syncing, setSyncing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
 
-  const handleSync = async () => {
-    setSyncing(true); setMsg('');
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLoading(true); setMsg('');
     try {
-      const res = await axios.post(`${API_BASE}/sync`);
-      setMsg(`✓ Synced ${res.data.synced || 0} records`);
+      const form = new FormData();
+      form.append('file', file);
+      const res = await axios.post(`${API_BASE}/import`, form);
+      setMsg(`✓ ${res.data.inserted} records imported`);
       setTimeout(() => setMsg(''), 4000);
     } catch (e) {
-      setMsg('Sync failed');
+      setMsg('Import failed');
       setTimeout(() => setMsg(''), 3000);
-    } finally { setSyncing(false); }
+    } finally { setLoading(false); e.target.value = ''; }
   };
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      {msg && <span style={{ fontSize: '12px', color: '#10b981' }}>{msg}</span>}
-      <button className="btn-primary" onClick={handleSync} disabled={syncing}
-        style={{ padding: '6px 14px', fontSize: '13px', height: '34px' }}>
-        {syncing ? <>{Icon.spin} Syncing...</> : <>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Sync OBD
-        </>
-        }
-      </button>
+      {msg && <span style={{ fontSize: '12px', color: '#10b981', whiteSpace: 'nowrap' }}>{msg}</span>}
+      <label className="btn-primary" style={{ padding: '6px 14px', fontSize: '13px', height: '34px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {loading ? <>{Icon.spin} Importing...</> : <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import CSV/Excel
+        </>}
+        <input type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }} onChange={handleImport} disabled={loading} />
+      </label>
     </div>
   );
 }
