@@ -293,9 +293,9 @@ function Dashboard({ stats, logs }) {
                 <th onClick={toggleDurationSort} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
                   Duration {durationSort === 'asc' ? '↑' : durationSort === 'desc' ? '↓' : '↕'}
                 </th>
+                <th>Button Pressed</th>
                 <th>Campaign</th>
                 <th>Status</th>
-                <th>Button Pressed</th>
                 <th>Agent</th>
                 <th>Time</th>
               </tr>
@@ -318,6 +318,11 @@ function Dashboard({ stats, logs }) {
                         : <span className="muted">0s</span>}
                     </td>
                     <td>
+                      {log.dtmf
+                        ? <span className="dtmf-btn">Pressed {log.dtmf}</span>
+                        : <span className="muted">No Input</span>}
+                    </td>
+                    <td>
                       <div className="campaign-cell">
                         <span className="campaign-name">{log.campaignName || '-'}</span>
                         <span className="campaign-id">#{log.campaignId}</span>
@@ -327,11 +332,6 @@ function Dashboard({ stats, logs }) {
                       <span className="status-badge" style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
                         {log.status === 'ANSWERED' ? Icon.check : Icon.x} {log.status}
                       </span>
-                    </td>
-                    <td>
-                      {log.dtmf
-                        ? <span className="dtmf-btn">Pressed {log.dtmf}</span>
-                        : <span className="muted">No Input</span>}
                     </td>
                     <td className="muted">{log.agentNumber || '—'}</td>
                     <td className="muted time-cell">
