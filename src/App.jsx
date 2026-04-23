@@ -228,6 +228,7 @@ function Dashboard({ stats, logs, loading, dateRange, onDateChange }) {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [durationFilter, setDurationFilter] = useState('ALL');
   const [campaignFilter, setCampaignFilter] = useState('ALL');
+  const [dtmfFilter, setDtmfFilter] = useState('ALL');
   const [page, setPage] = useState(1);
   const [durationSort, setDurationSort] = useState(null); // null | 'asc' | 'desc'
   const PER_PAGE = 10;
@@ -239,6 +240,7 @@ function Dashboard({ stats, logs, loading, dateRange, onDateChange }) {
     : { bg: 'rgba(239,68,68,0.12)',  color: '#ef4444', border: 'rgba(239,68,68,0.25)' };
 
   const uniqueCampaigns = [...new Set(logs.map(l => l.campaignName).filter(Boolean))];
+  const uniqueDtmf = [...new Set(logs.map(l => l.dtmf).filter(Boolean))].sort();
 
   const filtered = logs.filter(log => {
     const q = search.toLowerCase();
@@ -251,6 +253,7 @@ function Dashboard({ stats, logs, loading, dateRange, onDateChange }) {
     const matchStatus = statusFilter === 'ALL' || log.status === statusFilter;
 
     const matchCampaign = campaignFilter === 'ALL' || log.campaignName === campaignFilter;
+    const matchDtmf = dtmfFilter === 'ALL' || (dtmfFilter === 'NONE' ? !log.dtmf : log.dtmf === dtmfFilter);
 
     const dur = log.duration || 0;
     const matchDuration =
@@ -260,11 +263,11 @@ function Dashboard({ stats, logs, loading, dateRange, onDateChange }) {
       durationFilter === '31-60'? dur >= 31 && dur <= 60 :
       durationFilter === '60+'  ? dur > 60 : true;
 
-    return matchSearch && matchStatus && matchCampaign && matchDuration;
+    return matchSearch && matchStatus && matchCampaign && matchDtmf && matchDuration;
   });
 
-  const clearFilters = () => { setSearch(''); setStatusFilter('ALL'); setDurationFilter('ALL'); setCampaignFilter('ALL'); setPage(1); setDurationSort(null); };
-  const isFiltered = search || statusFilter !== 'ALL' || durationFilter !== 'ALL' || campaignFilter !== 'ALL' || durationSort;
+  const clearFilters = () => { setSearch(''); setStatusFilter('ALL'); setDurationFilter('ALL'); setCampaignFilter('ALL'); setDtmfFilter('ALL'); setPage(1); setDurationSort(null); };
+  const isFiltered = search || statusFilter !== 'ALL' || durationFilter !== 'ALL' || campaignFilter !== 'ALL' || dtmfFilter !== 'ALL' || durationSort;
 
   const sorted = durationSort
     ? [...filtered].sort((a, b) => durationSort === 'asc' ? a.duration - b.duration : b.duration - a.duration)
@@ -337,6 +340,12 @@ function Dashboard({ stats, logs, loading, dateRange, onDateChange }) {
           <select className="input-field filter-select" value={campaignFilter} onChange={e => handleCampaign(e.target.value)}>
             <option value="ALL">All Campaigns</option>
             {uniqueCampaigns.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+
+          <select className="input-field filter-select" value={dtmfFilter} onChange={e => { setDtmfFilter(e.target.value); setPage(1); }}>
+            <option value="ALL">All Buttons</option>
+            <option value="NONE">No Input</option>
+            {uniqueDtmf.map(d => <option key={d} value={d}>Pressed {d}</option>)}
           </select>
 
           {isFiltered && (
