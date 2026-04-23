@@ -289,6 +289,7 @@ function Dashboard({ stats, logs }) {
           <table>
             <thead>
               <tr>
+                <th>#</th>
                 <th>Phone</th>
                 <th onClick={toggleDurationSort} style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
                   Duration {durationSort === 'asc' ? '↑' : durationSort === 'desc' ? '↓' : '↕'}
@@ -305,6 +306,7 @@ function Dashboard({ stats, logs }) {
                 const s = sc(log.status);
                 return (
                   <tr key={i}>
+                    <td className="muted" style={{ fontWeight: 600, textAlign: 'center' }}>{(page - 1) * PER_PAGE + i + 1}</td>
                     <td>
                       <div className="phone-cell">
                         <span>{log.phone}</span>
@@ -350,15 +352,23 @@ function Dashboard({ stats, logs }) {
           <div className="pagination">
             <button className="page-btn" onClick={() => setPage(1)} disabled={page === 1}>«</button>
             <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={page === 1}>‹</button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-              .reduce((acc, p, idx, arr) => { if (idx > 0 && p - arr[idx-1] > 1) acc.push('...'); acc.push(p); return acc; }, [])
-              .map((p, i) => p === '...' ? (
-                <span key={i} className="page-dots">...</span>
+            {(() => {
+              const pages = [];
+              if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+              } else {
+                pages.push(1);
+                if (page > 3) pages.push('...');
+                for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+                if (page < totalPages - 2) pages.push('...');
+                pages.push(totalPages);
+              }
+              return pages.map((p, i) => p === '...' ? (
+                <span key={`d${i}`} className="page-dots">...</span>
               ) : (
                 <button key={p} className={`page-btn ${page === p ? 'page-btn--active' : ''}`} onClick={() => setPage(p)}>{p}</button>
-              ))
-            }
+              ));
+            })()}
             <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>›</button>
             <button className="page-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>»</button>
             <span className="page-info">{(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE, sorted.length)} of {sorted.length}</span>
