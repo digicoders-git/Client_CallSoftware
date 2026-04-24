@@ -12,8 +12,7 @@ export default function CallDataTable({ isAdmin }) {
   const [dtmfFilter, setDtmfFilter] = useState('ALL');
   const [durationSort, setDurationSort] = useState(null);
   const [selectedLog, setSelectedLog] = useState(null);
-  const today = new Date().toISOString().split('T')[0];
-  const [dateRange, setDateRange] = useState({ start: today, end: today });
+  const [dateRange, setDateRange] = useState({ start: '2026-04-23', end: '2026-04-23' });
   const PER_PAGE = 10;
 
   const fetchData = async () => {
