@@ -10,7 +10,7 @@ export default function ManageUsers() {
   const [msg, setMsg] = useState('');
 
   const fetchUsers = async () => {
-    try { const r = await axios.get(`${API_BASE}/admin/users`); setUsers(r.data); }
+    try { const r = await axios.get(`${API_BASE}/admin/users`); setUsers(Array.isArray(r.data) ? r.data : []); }
     catch (e) { console.error(e); }
   };
 

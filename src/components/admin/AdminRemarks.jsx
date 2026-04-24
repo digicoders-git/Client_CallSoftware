@@ -9,7 +9,7 @@ export default function AdminRemarks() {
   const fetchRemarks = async () => {
     try {
       const r = await axios.get(`${API_BASE}/admin/remarks`);
-      setRemarks(r.data);
+      setRemarks(Array.isArray(r.data) ? r.data : []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };

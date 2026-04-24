@@ -7,7 +7,7 @@ export default function Campaigns() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API_BASE}/campaigns`).then(r => setCampaigns(r.data)).catch(console.error).finally(() => setLoading(false));
+    axios.get(`${API_BASE}/campaigns`).then(r => setCampaigns(Array.isArray(r.data) ? r.data : [])).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   const statusMap = { 0: ['Running','#10b981'], 1: ['Paused','#f59e0b'], 2: ['Complete','#818cf8'], 3: ['Stopped','#ef4444'] };

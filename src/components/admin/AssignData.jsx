@@ -18,7 +18,9 @@ export default function AssignData() {
           axios.get(`${API_BASE}/admin/assignments`),
           axios.get(`${API_BASE}/campaigns`).catch(() => ({ data: [] }))
         ]);
-        setUsers(u.data); setAssignments(a.data); setCampaigns(c.data);
+        setUsers(Array.isArray(u.data) ? u.data : []);
+        setAssignments(Array.isArray(a.data) ? a.data : []);
+        setCampaigns(Array.isArray(c.data) ? c.data : []);
       } catch (e) { console.error(e); }
     };
     fetch();
