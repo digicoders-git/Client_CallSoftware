@@ -13,9 +13,10 @@ export default function AdminDashboard() {
           axios.get(`${API_BASE}/call-data`),
           axios.get(`${API_BASE}/admin/assignments`)
         ]);
-        const data = dataRes.data;
+        const data = Array.isArray(dataRes.data) ? dataRes.data : [];
+        const assignData = Array.isArray(assignRes.data) ? assignRes.data : [];
         const answered = data.filter(l => l.status === 'ANSWERED').length;
-        const totalAssigned = assignRes.data.reduce((s, u) => s + u.count, 0);
+        const totalAssigned = assignData.reduce((s, u) => s + u.count, 0);
         setStats({ total: data.length, answered, failed: data.length - answered, assigned: totalAssigned });
       } catch (e) { console.error(e); }
       finally { setLoading(false); }

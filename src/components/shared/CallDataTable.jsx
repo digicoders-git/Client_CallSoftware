@@ -23,7 +23,7 @@ export default function CallDataTable({ isAdmin }) {
       if (dateRange.start) params.append('startDate', dateRange.start);
       if (dateRange.end)   params.append('endDate', dateRange.end);
       const r = await axios.get(`${API_BASE}/call-data?${params}`);
-      setLogs(r.data);
+      setLogs(Array.isArray(r.data) ? r.data : []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
