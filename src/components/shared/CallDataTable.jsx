@@ -10,6 +10,7 @@ export default function CallDataTable({ isAdmin }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [dtmfFilter, setDtmfFilter] = useState('ALL');
+  const [campaignFilter, setCampaignFilter] = useState('ALL');
   const [durationSort, setDurationSort] = useState(null);
   const [selectedLog, setSelectedLog] = useState(null);
   const [dateRange, setDateRange] = useState({ start: '2026-04-23', end: '2026-04-23' });
@@ -36,13 +37,15 @@ export default function CallDataTable({ isAdmin }) {
     : { bg: 'rgba(239,68,68,0.12)', color: '#ef4444', border: 'rgba(239,68,68,0.25)' };
 
   const uniqueDtmf = [...new Set(logs.map(l => l.dtmf).filter(Boolean))].sort();
+  const uniqueCampaigns = [...new Set(logs.map(l => l.campaignName).filter(Boolean))].sort();
 
   const filtered = logs.filter(log => {
     const q = search.toLowerCase();
     const matchSearch = !q || log.phone?.includes(q) || log.campaignName?.toLowerCase().includes(q);
     const matchStatus = statusFilter === 'ALL' || log.status === statusFilter;
     const matchDtmf = dtmfFilter === 'ALL' ? true : dtmfFilter === 'NONE' ? !log.dtmf : log.dtmf === dtmfFilter;
-    return matchSearch && matchStatus && matchDtmf;
+    const matchCampaign = campaignFilter === 'ALL' || log.campaignName === campaignFilter;
+    return matchSearch && matchStatus && matchDtmf && matchCampaign;
   });
 
   const sorted = durationSort ? [...filtered].sort((a, b) => durationSort === 'asc' ? a.duration - b.duration : b.duration - a.duration) : filtered;
@@ -93,8 +96,12 @@ export default function CallDataTable({ isAdmin }) {
           <option value="NONE">No Input</option>
           {uniqueDtmf.map(d => <option key={d} value={d}>Pressed {d}</option>)}
         </select>
-        {(search || statusFilter !== 'ALL' || dtmfFilter !== 'ALL') && (
-          <button className="btn-clear" onClick={() => { setSearch(''); setStatusFilter('ALL'); setDtmfFilter('ALL'); setPage(1); }}>✕ Clear</button>
+        <select className="input-field filter-select" value={campaignFilter} onChange={e => { setCampaignFilter(e.target.value); setPage(1); }}>
+          <option value="ALL">All Campaigns</option>
+          {uniqueCampaigns.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        {(search || statusFilter !== 'ALL' || dtmfFilter !== 'ALL' || campaignFilter !== 'ALL') && (
+          <button className="btn-clear" onClick={() => { setSearch(''); setStatusFilter('ALL'); setDtmfFilter('ALL'); setCampaignFilter('ALL'); setPage(1); }}>✕ Clear</button>
         )}
       </div>
 
